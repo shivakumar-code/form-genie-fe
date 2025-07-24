@@ -87,15 +87,14 @@ const ApplicationForm = () => {
 
   const verifyTofetchOTP = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/auth/app/${formData.idNumber}`);
-      setData(response.data);
       setOpenOtpDialog(true);
       setOtpSent(true);
       setOtpStage('send');
       try {
-        await axios.post("http://localhost:5000/api/auth/send-otp", {
+        const response = await axios.post("http://localhost:5000/api/auth/send-otp", {
           cardNumber: '123'
         });
+        setData(response.data.userData);
        // setMessage(response.data.message);
       } catch (error) {
         setMessage('Failed to send OTP');
@@ -103,7 +102,6 @@ const ApplicationForm = () => {
     } catch {
       alert("Error sending OTP");
     }
-    console.log(data)
   };
 
   const handleVerifyOtp = async (e) => {
