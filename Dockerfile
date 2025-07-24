@@ -1,27 +1,27 @@
-# Step 1: Build React app with Node.js
-FROM node:22.13.1 AS build
+# Step 1: Build the React app
+FROM node:22.17.1-alpine AS build
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the project files
 COPY . .
-
-# Build the React app
 RUN npm run build
 
-# Step 2: Serve with Nginx
-FROM nginx:stable-alpine
+# Step 2: Serve the static files with "serve"
+FROM node:22.17.1-alpine
 
-# Copy built app from the build stage
-COPY --from=build /app/build /usr/share/nginx/html
+WORKDIR /app
 
-# Expose port 80
-EXPOSE 8085
+RUN npm install -g serve
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Copy the built React app from the previous stage
+COPY --from=build /app/build ./dist
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
+EXPOSE 8080
+
+CMD ["serve", "-s", "dist", "-l", "8080"]
