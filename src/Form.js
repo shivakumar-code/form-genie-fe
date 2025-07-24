@@ -18,8 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
-  OutlinedInput
+  CircularProgress
 } from '@mui/material';
 import axios from "axios";
 import Webcam from "react-webcam";
