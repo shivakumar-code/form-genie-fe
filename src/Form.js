@@ -108,13 +108,12 @@ const ApplicationForm = () => {
     try {
       const response = await axios.post("http://localhost:5000/api/auth/send-otp", {
         cardNumber: formData.idNumber,
-        imgSrc
+        imgSrc : imgSrc || 1
       });
       setOpenOtpDialog(true);
       setOtpSent(true);
       setOtpStage('send');
       setData(response.data.userData);
-      // setMessage(response.data.message);
     } catch (error) {
       setMessage('Failed to send OTP');
     }
