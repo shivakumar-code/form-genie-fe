@@ -112,7 +112,6 @@ const ApplicationForm = () => {
   };
 
  const verifyTofetchOTP = async () => {
-    debugger;
     try {
       await axios.post("http://localhost:5000/api/auth/send-otp", {
         cardNumber: extractedText || 'CARD123456',
