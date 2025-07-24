@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import OtpInput from './otpInput';
+
 import {
   Box,
   Button,
@@ -17,7 +19,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Checkbox
 } from '@mui/material';
 import axios from "axios";
 import Tesseract from "tesseract.js";
@@ -46,10 +49,10 @@ const ApplicationForm = () => {
   const [errors, setErrors] = useState({});
   const [file, setFile] = useState(null);
   const [idType, setIdType] = useState('');
-  // const [inputMethod, setInputMethod] = useState('manual');
   const [isUpload, setIsUpload] = useState(false);
   const [openOtpDialog, setOpenOtpDialog] = useState(false);
   const [otpStage, setOtpStage] = useState('send'); // 'send' or 'verify'
+  const [uploadDisabled, setUploadDisabled] = useState(false);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -80,6 +83,8 @@ const ApplicationForm = () => {
   const handleFileUpload = async (e) => {
     const uploadedFile = e.target.files[0];
     if (!uploadedFile) return;
+    setUploadDisabled(true); // Disable after selecting a file
+
     setFile(uploadedFile);
     setProcessing(true);
     try {
@@ -115,13 +120,11 @@ const ApplicationForm = () => {
     debugger;
     try {
       await axios.post("http://localhost:5000/api/auth/send-otp", {
-        cardNumber: extractedText || 'CARD123456',
-        // email: formData.email,
-        // phone: '456'
+        cardNumber: extractedText || formData.idNumber ||'CARD123456',
       });
       setOpenOtpDialog(true);
       setOtpSent(true);
-      setOtpStage('verify');
+      setOtpStage('send');
       alert("OTP sent via email & SMS");
     } catch (err) {
       alert("Error sending OTP");
@@ -129,29 +132,29 @@ const ApplicationForm = () => {
   };
 
   // Fetch details based on ID Number
-  // const handleFetchDetails = async () => {
-  //   if (!formData.idNumber) {
-  //     alert("Please provide an ID Number.");
-  //     return;
-  //   }
-  //   try {
-  //     // const response = await axios.get(`/api/user/${formData.idNumber}`);
-  //     // setFormData({ ...formData, ...response.data });
-  //     // For demo, just fill some mock data:
-  //     setFormData(prev => ({
-  //       ...prev,
-  //       firstName: 'John',
-  //       lastName: 'Doe',
-  //       dob: '1990-01-01',
-  //       country: 'United Kingdom',
-  //       city: 'London',
-  //       state: 'Greater London'
-  //     }));
-  //     setOpenOtpDialog(true); // Show OTP dialog as popup
-  //   } catch (err) {
-  //     alert("Failed to fetch details.");
-  //   }
-  // };
+  const handleFetchDetails = async () => {
+    if (!formData.idNumber) {
+      alert("Please provide an ID Number.");
+      return;
+    }
+    try {
+      // const response = await axios.get(`/api/user/${formData.idNumber}`);
+      // setFormData({ ...formData, ...response.data });
+      // For demo, just fill some mock data:
+      setFormData(prev => ({
+        ...prev,
+        firstName: 'John',
+        lastName: 'Doe',
+        dob: '1990-01-01',
+        country: 'United Kingdom',
+        city: 'London',
+        state: 'Greater London'
+      }));
+      setOpenOtpDialog(true); // Show OTP dialog as popup
+    } catch (err) {
+      alert("Failed to fetch details.");
+    }
+  };
 
   // OTP submit
   // OTP submit (Send OTP)
@@ -159,10 +162,9 @@ const ApplicationForm = () => {
     e.preventDefault();
     if (!formData.email) return;
     try {
-      await axios.post("http://localhost:5000/api/auth/send-otp", {
+      await axios.post("http://localhost:5000/send-otp", {
         cardNumber: formData.idNumber || '123',
         email: formData.email,
-        phone: formData.phone
       });
       setOtpSent(true);
       setOtpStage('verify'); // Move to verify stage
@@ -204,7 +206,13 @@ const ApplicationForm = () => {
     } catch (err) {
       alert("Error sending OTP");
     }
-  };
+  }; 
+  // const maskEmail =(email) => {
+  //   if(!email)return '';
+  //   const [user, domain] = email.split('@');
+  //   const visibleUser = user.slice(0, 2) + '***';
+  //   return `${visibleUser}@${domain}`;
+  // }
 
   return (
     <Box
@@ -223,13 +231,14 @@ const ApplicationForm = () => {
         <form onSubmit={handleSubmit}>
           <Stack spacing={2}>
             {/* ID Type Selection */}
-            <FormControl fullWidth>
+            <FormControl fullWidth required>
               <InputLabel id="id-type-label">Select ID Type</InputLabel>
               <Select
                 labelId="id-type-label"
                 label="Select ID Type"
                 value={idType}
                 onChange={(e) => setIdType(e.target.value)}
+                
               >
                 <MenuItem value="driving">Driving Licence</MenuItem>
                 <MenuItem value="national">National Card</MenuItem>
@@ -237,15 +246,16 @@ const ApplicationForm = () => {
               </Select>
             </FormControl>
 
-            <FormControl component="fieldset">
-              <RadioGroup
-                row
-                value={isUpload ? "upload" : "manual"}
-                onChange={(e) => setIsUpload(e.target.value === "upload")}
-              >
-                <FormControlLabel value="upload" control={<Radio />} label="Upload Image" />
-              </RadioGroup>
-            </FormControl>
+            <FormControlLabel
+               control={
+                 <Checkbox
+                   checked={isUpload}
+                   onChange={(e) => setIsUpload(e.target.checked)}
+                 />
+               }
+               label="Upload Image"
+             />
+
 
             {/* Conditional Rendering */}
             {isUpload ? (
@@ -266,15 +276,15 @@ const ApplicationForm = () => {
                     value={formData.idNumber}
                     disabled
                     sx={{ flexGrow: 1 }}
-                    fullWidth
+                    
                   />
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={verifyTofetchOTP}
-                    disabled={!formData.idNumber}
+                    onClick={handleFetchDetails}
+                    disabled={!formData.idNumber || !idType}
                   >
-                    Fetch Data
+                    Fetch Details
                   </Button>
                 </Box>
               </>
@@ -292,8 +302,8 @@ const ApplicationForm = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={verifyTofetchOTP}
-                  disabled={!formData.idNumber}
+                  onClick={handleFetchDetails}
+                  disabled={!formData.idNumber || !idType}
                 >
                   Fetch Details
                 </Button>
@@ -303,19 +313,23 @@ const ApplicationForm = () => {
             <Dialog open={openOtpDialog} onClose={() => { setOpenOtpDialog(false); setOtpStage('send'); setOtpSent(false); setOtp(''); }}>
               <DialogTitle>OTP Authentication</DialogTitle>
               <DialogContent>
-                {otpSent && otpStage === 'send' && (
+                { otpStage === 'send' && (
                   <>
+                    <Typography variant="body1" sx={{mb:2}}>
+                     OTP will be sent to: <b>{maskEmail(formData.email) }</b>
+                     </Typography>
                     <TextField
-                      label="Email ID"
+                      label="Kap****@gmail.com"
                       name="email"
                       type="email"
-                      value={formData.email}
+                      value={maskEmail(formData.email)}
                       onChange={handleChange}
                       error={!!errors.email}
                       helperText={errors.email}
                       fullWidth
                       sx={{ mb: 2 }}
                     />
+                   
                     <Button
                       variant="contained"
                       color="secondary"
@@ -329,12 +343,8 @@ const ApplicationForm = () => {
                 )}
                 {otpStage === 'verify' && (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                    <TextField
-                      label="Enter OTP"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      fullWidth
-                    />
+                    <OtpInput value={otp} onChange={setOtp} />
+
                     <Button
                       variant="contained"
                       color="primary"
