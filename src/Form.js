@@ -126,7 +126,14 @@ const handleVerifyOtp = async (e) => {
     await axios.post("https://form-genie-be-475414324273.europe-west1.run.app/api/auth/verify-otp", {
       cardNumber: extractedText ? extractedText : formData.idNumber,
       otp
-    });
+    },
+     {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      } 
+  );
     alert("OTP Verified!");
     setOpenOtpDialog(false);
     setOtpStage('send');
