@@ -117,7 +117,14 @@ const ApplicationForm = () => {
       const response = await axios.post("http://localhost:5000/api/auth/send-otp", {
         cardNumber: formData.idNumber,
         imgSrc: imgSrc || 1
-      });
+      }, 
+     {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true 
+      }
+    );
       setOpenOtpDialog(true);
       setOtpSent(true);
       setOtpStage('send');
