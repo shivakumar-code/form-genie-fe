@@ -152,7 +152,14 @@ const handleSubmit = async (e) => {
     await axios.post("https://form-genie-be-475414324273.europe-west1.run.app/api/auth/send-otp", {
       citizenId: formData.idNumber,
       email: formData.email,
-    });
+    },
+    {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      } 
+  );
     setOtpSent(true);
     alert("OTP sent via email & SMS");
   } catch {
