@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from "react";
 import {
   Box,
   Button,
@@ -18,17 +18,26 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress
-} from '@mui/material';
+  CircularProgress,
+} from "@mui/material";
 import axios from "axios";
 import Webcam from "react-webcam";
 import Tesseract from "tesseract.js";
 
 const ApplicationForm = () => {
   const [formData, setFormData] = useState({
-    idNumber: '', firstName: '', lastName: '', dob: '',
-    email: '', phone: '', address1: '', address2: '',
-    city: '', state: '', postalCode: '', country: '',
+    idNumber: "",
+    firstName: "",
+    lastName: "",
+    dob: "",
+    email: "",
+    phone: "",
+    address1: "",
+    address2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
   });
   const [extractedText, setExtractText] = useState(null);
   const [processing, setProcessing] = useState(false);
@@ -37,12 +46,12 @@ const ApplicationForm = () => {
   const [data, setData] = useState({});
   const [errors, setErrors] = useState({});
   const [file, setFile] = useState(null);
-  const [idType, setIdType] = useState('');
+  const [idType, setIdType] = useState("");
   const [isUpload, setIsUpload] = useState(false);
   const [openOtpDialog, setOpenOtpDialog] = useState(false);
-  const [otpStage, setOtpStage] = useState('send');
-  const [message, setMessage] = useState('');
-  const [otpMessage, setOtpMessage] = useState('');
+  const [otpStage, setOtpStage] = useState("send");
+  const [message, setMessage] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imgSrc, setImgSrc] = useState(null);
@@ -68,19 +77,33 @@ const ApplicationForm = () => {
 
   const validate = () => {
     const newErrors = {};
-    const { idNumber, firstName, lastName, dob, email, phone, address1, city, state, postalCode, country } = formData;
+    const {
+      idNumber,
+      firstName,
+      lastName,
+      dob,
+      email,
+      phone,
+      address1,
+      city,
+      state,
+      postalCode,
+      country,
+    } = formData;
 
-    if (!idNumber) newErrors.idNumber = 'ID Number is required';
-    if (!firstName) newErrors.firstName = 'First Name is required';
-    if (!lastName) newErrors.lastName = 'Last name is required';
-    if (!dob) newErrors.dob = 'Date of Birth is required';
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Valid email is required';
-    if (!phone || !/^\d{10}$/.test(phone)) newErrors.phone = 'Phone number must be 10 digits';
-    if (!address1) newErrors.address1 = 'Address Line 1 is required';
-    if (!city) newErrors.city = 'City is required';
-    if (!state) newErrors.state = 'State/Province is required';
-    if (!postalCode) newErrors.postalCode = 'Postal Code is required';
-    if (!country) newErrors.country = 'Country is required';
+    if (!idNumber) newErrors.idNumber = "ID Number is required";
+    if (!firstName) newErrors.firstName = "First Name is required";
+    if (!lastName) newErrors.lastName = "Last name is required";
+    if (!dob) newErrors.dob = "Date of Birth is required";
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      newErrors.email = "Valid email is required";
+    if (!phone || !/^\d{10}$/.test(phone))
+      newErrors.phone = "Phone number must be 10 digits";
+    if (!address1) newErrors.address1 = "Address Line 1 is required";
+    if (!city) newErrors.city = "City is required";
+    if (!state) newErrors.state = "State/Province is required";
+    if (!postalCode) newErrors.postalCode = "Postal Code is required";
+    if (!country) newErrors.country = "Country is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -92,13 +115,20 @@ const ApplicationForm = () => {
     setFile(uploadedFile);
     setProcessing(true);
     try {
-      const { data: { text } } = await Tesseract.recognize(uploadedFile, 'eng');
+      const {
+        data: { text },
+      } = await Tesseract.recognize(uploadedFile, "eng");
       setExtractText(text);
-      const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-      const idLine = lines.find(line => /\d{9}4GBR/.test(line));
-      const fallback = lines.find(line => /\d{9,}/.test(line));
-      const idNumber = idLine ? idLine.substring(0, 9) : fallback?.match(/\d{9,}/)?.[0] || '';
-      setFormData(prev => ({ ...prev, idNumber }));
+      const lines = text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const idLine = lines.find((line) => /\d{9}4GBR/.test(line));
+      const fallback = lines.find((line) => /\d{9,}/.test(line));
+      const idNumber = idLine
+        ? idLine.substring(0, 9)
+        : fallback?.match(/\d{9,}/)?.[0] || "";
+      setFormData((prev) => ({ ...prev, idNumber }));
     } catch {
       alert("OCR failed. Try another image.");
     } finally {
@@ -109,55 +139,64 @@ const ApplicationForm = () => {
   const verifyTofetchOTP = async () => {
     setProcessing(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/send-otp", {
-        cardNumber: formData.idNumber,
-        imgSrc: imgSrc || 1
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/send-otp",
+        {
+          cardNumber: formData.idNumber,
+          imgSrc: imgSrc || 1,
+        }
+      );
       setOpenOtpDialog(true);
       setOtpSent(true);
-      setOtpStage('send');
+      setOtpStage("send");
       setData(response.data);
       if (response?.data?.maskedMail || response?.data?.maskedPhone) {
-        setMessage('');
+        setMessage("");
       }
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Failed to send OTP');
-    }
-    finally {
+      setMessage(error.response?.data?.message || "Failed to send OTP");
+    } finally {
       setProcessing(false);
     }
-  }
+  };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     try {
       await axios.post("http://localhost:5000/api/auth/verify-otp", {
         cardNumber: extractedText ? extractedText : formData.idNumber,
-        otp
+        otp,
       });
       alert("OTP Verified!");
       setOpenOtpDialog(false);
-      setOtpStage('verify');
-      setOtp('');
+      setOtpStage("verify");
+      setOtp("");
       setOtpSent(false);
-      setFormData(prev => ({ ...prev, ...data.userData }));
+      setFormData((prev) => ({ ...prev, ...data.userData }));
     } catch (error) {
-      setOtpMessage(error.response?.data?.message || 'OTP verification failed');
+      setOtpMessage(error.response?.data?.message || "OTP verification failed");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.idNumber == "") {
-      alert("Please enter the required details")
+      alert("Please enter the required details");
     }
     if (!validate()) return;
-
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', py: 5, px: 2 }}>
-      <Paper elevation={6} sx={{ maxWidth: 600, mx: 'auto', p: 4, backgroundColor: 'rgba(240, 240, 240)' }}>
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5", py: 5, px: 2 }}>
+      <Paper
+        elevation={6}
+        sx={{
+          maxWidth: 600,
+          mx: "auto",
+          p: 4,
+          backgroundColor: "rgba(240, 240, 240)",
+        }}
+      >
         <Typography variant="h5" align="center" gutterBottom color="primary">
           Application & Registration Form
         </Typography>
@@ -179,20 +218,24 @@ const ApplicationForm = () => {
                 <MenuItem value="faceScan">Face Scan</MenuItem>
               </Select>
             </FormControl>
-            {idType != "faceScan" &&
+            {idType != "faceScan" && (
               <FormControl component="fieldset">
                 <RadioGroup
                   row
                   value={isUpload ? "upload" : "manual"}
                   onChange={(e) => setIsUpload(e.target.value === "upload")}
                 >
-                  <FormControlLabel value="upload" control={<Radio disabled={!idType} />} label="Upload Image" />
+                  <FormControlLabel
+                    value="upload"
+                    control={<Radio disabled={!idType} />}
+                    label="Upload Image"
+                  />
                 </RadioGroup>
               </FormControl>
-            }
+            )}
 
             {/* Face scan*/}
-            {idType == "faceScan" &&
+            {idType == "faceScan" && (
               <div>
                 <Button
                   variant="contained"
@@ -206,11 +249,23 @@ const ApplicationForm = () => {
                 {isModalOpen && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[90%] max-w-lg shadow-lg relative">
-
                       <div className="flex flex-col items-center space-y-4">
                         {imgSrc ? (
-                          <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
-                            <img src={imgSrc} alt="Captured face" style={{ margin: "10px 0px" }} width={200} className="rounded shadow" />
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              flexDirection: "column",
+                              alignItems: "center",
+                            }}
+                          >
+                            <img
+                              src={imgSrc}
+                              alt="Captured face"
+                              style={{ margin: "10px 0px" }}
+                              width={200}
+                              className="rounded shadow"
+                            />
                             <Button
                               variant="contained"
                               color="primary"
@@ -221,7 +276,14 @@ const ApplicationForm = () => {
                             </Button>
                           </div>
                         ) : (
-                          <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              flexDirection: "column",
+                              alignItems: "center",
+                            }}
+                          >
                             <Webcam
                               height={300}
                               width={300}
@@ -252,20 +314,25 @@ const ApplicationForm = () => {
                   </div>
                 )}
               </div>
-            }
+            )}
             {/* Conditional Rendering */}
             {isUpload ? (
               <>
                 <Button variant="outlined" component="label" sx={{ mb: 2 }}>
                   {processing ? "Processing..." : "Upload Image"}
-                  <input type="file" accept="image/*" hidden onChange={handleFileUpload} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileUpload}
+                  />
                 </Button>
                 {file && (
                   <Typography variant="body2" color="text.secondary">
                     {file.name}
                   </Typography>
                 )}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <TextField
                     label="ID Number"
                     name="idNumber"
@@ -279,14 +346,18 @@ const ApplicationForm = () => {
                     color="primary"
                     onClick={verifyTofetchOTP}
                     disabled={processing || !formData.idNumber}
-                    startIcon={processing ? <CircularProgress size={20} color="inherit" /> : null}
+                    startIcon={
+                      processing ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : null
+                    }
                   >
-                    {processing ? 'Fetching...' : 'Fetch Data'}
+                    {processing ? "Fetching..." : "Fetch Data"}
                   </Button>
                 </Box>
               </>
             ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <TextField
                   label="ID Number"
                   name="idNumber"
@@ -300,14 +371,26 @@ const ApplicationForm = () => {
                   color="primary"
                   onClick={verifyTofetchOTP}
                   disabled={processing || !formData.idNumber}
-                  startIcon={processing ? <CircularProgress size={20} color="inherit" /> : null}
+                  startIcon={
+                    processing ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : null
+                  }
                 >
-                  {processing ? 'Fetching...' : 'Fetch Data'}
+                  {processing ? "Fetching..." : "Fetch Data"}
                 </Button>
               </Box>
             )}
             {/* OTP Dialog */}
-            <Dialog open={openOtpDialog} onClose={() => { setOpenOtpDialog(false); setOtpStage('send'); setOtpSent(false); setOtp(''); }}>
+            <Dialog
+              open={openOtpDialog}
+              onClose={() => {
+                setOpenOtpDialog(false);
+                setOtpStage("send");
+                setOtpSent(false);
+                setOtp("");
+              }}
+            >
               <DialogTitle>
                 Enter the OTP sent to your registered{" "}
                 {data.maskedMail && (
@@ -315,7 +398,7 @@ const ApplicationForm = () => {
                     <strong>Mail:</strong> {data.maskedMail}
                   </>
                 )}
-                {data.maskedMail && data.maskedPhone && ' and '}
+                {data.maskedMail && data.maskedPhone && " and "}
                 {data.maskedPhone && (
                   <>
                     <strong>Phone:</strong> {data.maskedPhone}
@@ -324,7 +407,7 @@ const ApplicationForm = () => {
               </DialogTitle>
 
               <DialogContent>
-                {otpSent && otpStage === 'send' && (
+                {otpSent && otpStage === "send" && (
                   <>
                     <TextField
                       label="OTP"
@@ -346,19 +429,31 @@ const ApplicationForm = () => {
                     >
                       Verify OTP
                     </Button>
-                    <p style={{ marginTop: '16px', color: 'red' }}>{otpMessage}</p>
+                    <p style={{ marginTop: "16px", color: "red" }}>
+                      {otpMessage}
+                    </p>
                   </>
                 )}
-
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => { setOpenOtpDialog(false); setOtpStage('send'); setOtpSent(false); setOtp(''); }}>Close</Button>
+                <Button
+                  onClick={() => {
+                    setOpenOtpDialog(false);
+                    setOtpStage("send");
+                    setOtpSent(false);
+                    setOtp("");
+                  }}
+                >
+                  Close
+                </Button>
               </DialogActions>
             </Dialog>
 
-            <p style={{ marginTop: '16px', color: 'red' }}>{message}</p>
+            <p style={{ marginTop: "16px", color: "red" }}>{message}</p>
 
-            <Divider sx={{ my: 3, borderBottomWidth: 3, borderColor: 'primary.main' }} />
+            <Divider
+              sx={{ my: 3, borderBottomWidth: 3, borderColor: "primary.main" }}
+            />
 
             <Typography variant="h6" color="primary">
               User Information
@@ -492,8 +587,13 @@ const ApplicationForm = () => {
               fullWidth
             />
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-              <Button type="submit" disabled={!formData.firstName} variant="contained" color="primary">
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+              <Button
+                type="submit"
+                disabled={!formData.firstName}
+                variant="contained"
+                color="primary"
+              >
                 Submit
               </Button>
             </Box>
