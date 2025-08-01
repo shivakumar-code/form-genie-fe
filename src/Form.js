@@ -109,7 +109,7 @@ const ApplicationForm = () => {
   const verifyTofetchOTP = async () => {
     setProcessing(true);
     try {
-      const response = await axios.post("https://form-genie-be-475414324273.europe-west1.run.app/api/auth/send-otp", {
+      const response = await axios.post("http://localhost:5000/api/auth/send-otp", {
         cardNumber: formData.idNumber,
         imgSrc: imgSrc || 1
       });
@@ -131,7 +131,7 @@ const ApplicationForm = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("https://form-genie-be-475414324273.europe-west1.run.app/api/auth/verify-otp", {
+      await axios.post("http://localhost:5000/api/auth/verify-otp", {
         cardNumber: extractedText ? extractedText : formData.idNumber,
         otp
       });
